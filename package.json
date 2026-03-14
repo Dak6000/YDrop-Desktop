@@ -1,0 +1,47 @@
+{
+  "name": "ydrop",
+  "version": "1.0.0",
+  "description": "YDrop — Téléchargeur YouTube & coupeur vidéo multiplateforme",
+  "author": "DJADJARO Abdoul Khabirou",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "build:win":   "electron-builder --win",
+    "build:mac":   "electron-builder --mac",
+    "build:linux": "electron-builder --linux"
+  },
+  "build": {
+    "appId": "com.ydrop",
+    "productName": "YDrop",
+    "directories": { "output": "dist" },
+    "extraResources": [
+      { "from": "bin/", "to": "bin/", "filter": ["**/*"] }
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "installerHeaderIcon": "assets/icon.ico",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "YDrop"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "assets/icon.icns"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "assets/icon.png"
+    }
+  },
+  "devDependencies": {
+    "electron": "^29.0.0",
+    "electron-builder": "^24.0.0"
+  }
+}

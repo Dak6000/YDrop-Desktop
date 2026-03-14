@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https:; img-src 'self' https: data: blob:;"/>
+  <title>YDrop Desktop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="glow"></div>
+
+<!-- TITLEBAR -->
+<div id="titlebar">
+  <div class="tb-logo">Y<span>Drop</span></div>
+  <div class="tb-controls">
+    <button class="tc mn" onclick="window.ydrop.minimize()"></button>
+    <button class="tc mx" onclick="window.ydrop.maximize()"></button>
+    <button class="tc cl" onclick="window.ydrop.close()"></button>
+  </div>
+</div>
+
+<div id="app">
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="sv-logo">Y<span>Drop</span></div>
+    <div class="snav">
+      <button class="stab on"  data-sec="dl"     onclick="switchSec(this)"><span class="ico">⬇</span> Télécharger</button>
+      <button class="stab pk"  data-sec="cut"    onclick="switchSec(this)"><span class="ico">✂</span> Découper</button>
+      <button class="stab bl"  data-sec="guide"  onclick="switchSec(this)"><span class="ico">📖</span> Guide</button>
+      <button class="stab gr"  data-sec="params" onclick="switchSec(this)"><span class="ico">⚙</span> Paramètres</button>
+    </div>
+    <div class="sv-bottom">
+      <div class="bin-status">
+        <div class="bin-row"><div class="bin-dot" id="dot-ytdlp"></div><span>yt-dlp</span></div>
+        <div class="bin-row"><div class="bin-dot" id="dot-ffmpeg"></div><span>ffmpeg</span></div>
+        <div id="bin-platform" style="margin-top:6px;font-size:.68rem;color:var(--muted)"></div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="main">
+
+    <!-- ══ TÉLÉCHARGER ══ -->
+    <section id="sec-dl" class="sec on">
+      <div class="ptitle">Télécharger</div>
+      <div class="psub">Collez un lien YouTube, choisissez le format et téléchargez.</div>
+
+      <div class="card">
+        <label class="lbl">Lien YouTube</label>
+        <div style="display:flex;gap:8px">
+          <input id="url-inp" class="inp" type="text" placeholder="https://www.youtube.com/watch?v=…" autocomplete="off" spellcheck="false"/>
+          <button class="btn by" id="btn-info" onclick="fetchInfo()"><span>🔍</span> Analyser</button>
+        </div>
+      </div>
+
+      <div class="vcard" id="vcard" style="display:none">
+        <div class="thmb"><img id="vthumb" src="" alt=""/></div>
+        <div class="vmeta">
+          <div class="vtitle" id="vtitle"></div>
+          <div class="vsub"><span>👤 <span id="vauthor"></span></span><span>⏱ <span id="vdur"></span></span><span>👁 <span id="vviews"></span></span></div>
+        </div>
+      </div>
+
+      <div class="card" id="fmt-card" style="display:none">
+        <label class="lbl">Format</label>
+        <div class="ftabs">
+          <button class="ftab on" onclick="switchFTab(this,'v')">🎬 Vidéo</button>
+          <button class="ftab"    onclick="switchFTab(this,'a')">🎵 Audio</button>
+        </div>
+        <div class="fgrid" id="fgrid-v">
+          <label class="fmt fv on"><input type="radio" name="fmt" value="video_1080" checked/><div class="fic">🎬</div><div><div class="fn">1080p</div><div class="fd">Full HD · MP4</div></div></label>
+          <label class="fmt fv"><input type="radio" name="fmt" value="video_4k"/><div class="fic">🎬</div><div><div class="fn">4K</div><div class="fd">Ultra HD · MP4</div></div></label>
+          <label class="fmt fv"><input type="radio" name="fmt" value="video_720"/><div class="fic">🎬</div><div><div class="fn">720p</div><div class="fd">HD · MP4</div></div></label>
+          <label class="fmt fv"><input type="radio" name="fmt" value="video_480"/><div class="fic">🎬</div><div><div class="fn">480p</div><div class="fd">SD · MP4</div></div></label>
+          <label class="fmt fv"><input type="radio" name="fmt" value="video_360"/><div class="fic">🎬</div><div><div class="fn">360p</div><div class="fd">Léger · MP4</div></div></label>
+        </div>
+        <div class="fgrid" id="fgrid-a" style="display:none">
+          <label class="fmt fa"><input type="radio" name="fmt" value="audio_mp3_320"/><div class="fic">🎵</div><div><div class="fn">MP3 320k</div><div class="fd">Qualité max</div></div></label>
+          <label class="fmt fa"><input type="radio" name="fmt" value="audio_mp3_192"/><div class="fic">🎵</div><div><div class="fn">MP3 192k</div><div class="fd">Équilibré</div></div></label>
+          <label class="fmt fa"><input type="radio" name="fmt" value="audio_m4a"/><div class="fic">🎵</div><div><div class="fn">M4A</div><div class="fd">AAC · Apple</div></div></label>
+          <label class="fmt fa"><input type="radio" name="fmt" value="audio_flac"/><div class="fic">🎵</div><div><div class="fn">FLAC</div><div class="fd">Lossless</div></div></label>
+          <label class="fmt fa"><input type="radio" name="fmt" value="audio_wav"/><div class="fic">🎵</div><div><div class="fn">WAV</div><div class="fd">Brut · 100%</div></div></label>
+          <label class="fmt fa"><input type="radio" name="fmt" value="audio_ogg"/><div class="fic">🎵</div><div><div class="fn">OGG</div><div class="fd">Vorbis</div></div></label>
+        </div>
+        <div style="margin-top:16px">
+          <label class="lbl">Dossier de sortie</label>
+          <div class="fsel">
+            <div class="fpath" id="out-path">— Choisir un dossier —</div>
+            <button class="btn bg" onclick="chooseFolder('dl')">📁 Parcourir</button>
+          </div>
+        </div>
+        <button class="btn by bfull" id="btn-dl" onclick="startDownload()" disabled>⬇ Télécharger</button>
+      </div>
+
+      <div class="pbox" id="dl-prog" style="display:none">
+        <div class="prow"><span id="dl-lbl">Téléchargement…</span><span id="dl-pct">0 %</span></div>
+        <div class="pbg"><div class="pbar py" id="dl-pbar"></div></div>
+      </div>
+      <div id="dl-res" style="display:none">
+        <div class="card"><label class="lbl">✅ Fichier téléchargé</label><div class="rlist" id="dl-rlist"></div></div>
+      </div>
+    </section>
+
+    <!-- ══ DÉCOUPER ══ -->
+    <section id="sec-cut" class="sec">
+      <div class="ptitle">Découper</div>
+      <div class="psub">
+        <span class="offline-badge">🔌 100% hors ligne — aucune connexion requise</span>
+      </div>
+
+      <div class="card" id="dz-wrap">
+        <div class="dz" id="dz" onclick="openVideoFile()">
+          <div class="dico">🎬</div>
+          <div class="dttl">Cliquez ou glissez une vidéo ici</div>
+          <div class="dsub">MP4, MOV, AVI, MKV, WEBM — traité localement par ffmpeg</div>
+        </div>
+      </div>
+
+      <div id="cut-editor" style="display:none">
+        <div class="card">
+          <video id="cvid" controls></video>
+          <div id="tl" class="tltrack" onclick="tlClick(event)">
+            <div class="tlprog" id="tlprog"></div>
+            <div class="tlsel" id="tlsel"></div>
+            <div class="tlh" id="tlhs"></div>
+            <div class="tlh" id="tlhe"></div>
+          </div>
+          <div class="tlticks" id="tlticks"></div>
+          <div class="tcol">
+            <div><label class="lbl">Début</label><input class="inp pf" id="ts" type="text" placeholder="0:00" oninput="onTI('s')"/></div>
+            <div><label class="lbl">Fin</label>  <input class="inp pf" id="te" type="text" placeholder="0:00" oninput="onTI('e')"/></div>
+          </div>
+          <div class="brow" style="margin-bottom:14px">
+            <button class="btn bg" onclick="prevSel()">▶ Aperçu</button>
+            <button class="btn bg" onclick="rstSel()">↺ Réinitialiser</button>
+          </div>
+
+          <label class="lbl">Format de sortie</label>
+          <div class="ratio-grid">
+            <label class="ratio-card on"><input type="radio" name="ratio" value="original" checked/><div class="rv" style="width:38px;height:26px"></div><div class="rl">Original</div><div class="rd">tel quel</div></label>
+            <label class="ratio-card"><input type="radio" name="ratio" value="9:16"/><div class="rv" style="width:18px;height:32px"></div><div class="rl">9:16</div><div class="rd">TikTok</div></label>
+            <label class="ratio-card"><input type="radio" name="ratio" value="1:1"/><div class="rv" style="width:28px;height:28px"></div><div class="rl">1:1</div><div class="rd">Carré</div></label>
+            <label class="ratio-card"><input type="radio" name="ratio" value="4:5"/><div class="rv" style="width:24px;height:30px"></div><div class="rl">4:5</div><div class="rd">Portrait</div></label>
+            <label class="ratio-card"><input type="radio" name="ratio" value="16:9"/><div class="rv" style="width:36px;height:20px"></div><div class="rl">16:9</div><div class="rd">Paysage</div></label>
+          </div>
+
+          <div style="margin-top:14px">
+            <label class="lbl">Nommage des fichiers</label>
+            <div class="naming-toggle">
+              <button class="ntoggle on" id="ntog-video" onclick="setNamingMode('video')">🎬 Nom de la vidéo</button>
+              <button class="ntoggle"    id="ntog-seg"   onclick="setNamingMode('segment')">🔢 segment_XX</button>
+            </div>
+            <div id="name-custom-wrap" style="margin-bottom:10px">
+              <input class="inp pf" id="name-custom" type="text" placeholder="Nom personnalisé (optionnel)" oninput="updNamePreview()" style="margin-bottom:6px"/>
+            </div>
+            <div class="name-preview" id="name-preview">—</div>
+          </div>
+
+          <div style="margin-top:14px">
+            <label class="lbl">Durée par segment</label>
+            <div class="tcol">
+              <select class="inp" id="sdur" onchange="onDC()">
+                <option value="15">15 secondes</option>
+                <option value="30">30 secondes</option>
+                <option value="60" selected>1 minute</option>
+                <option value="120">2 minutes</option>
+                <option value="300">5 minutes</option>
+                <option value="0">Personnalisé…</option>
+              </select>
+              <div id="cdur-wrap" style="display:none">
+                <input class="inp pf" id="csec" type="number" min="1" placeholder="Secondes" value="60"/>
+              </div>
+            </div>
+          </div>
+
+          <label class="lbl">Dossier de sortie</label>
+          <div class="fsel" style="margin-bottom:14px">
+            <div class="fpath" id="cut-out-path">— Choisir un dossier —</div>
+            <button class="btn bg" onclick="chooseFolder('cut')">📁 Parcourir</button>
+          </div>
+
+          <div class="brow" style="margin-bottom:12px">
+            <button class="btn bg" onclick="calcSegs()">⟳ Calculer segments</button>
+            <button class="btn bp" id="btn-cut" onclick="startCut()">✂ Découper</button>
+          </div>
+          <div id="slist" class="slist"></div>
+        </div>
+
+        <div class="pbox" id="cut-prog" style="display:none">
+          <div class="prow"><span id="cut-lbl">Découpage…</span><span id="cut-pct">0 %</span></div>
+          <div class="pbg"><div class="pbar pp" id="cut-pbar"></div></div>
+        </div>
+        <div id="cut-res" style="display:none">
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+              <label class="lbl" style="margin:0">✅ Segments exportés</label>
+              <button class="btn bg" style="padding:6px 12px;font-size:.78rem" onclick="openCutFolder()">📂 Ouvrir le dossier</button>
+            </div>
+            <div class="rlist" id="cut-rlist"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ GUIDE ══ -->
+    <section id="sec-guide" class="sec">
+      <div class="ptitle">Guide d'utilisation</div>
+      <div class="psub">Tout ce qu'il faut savoir pour utiliser YDrop efficacement.</div>
+
+      <div class="guide-card">
+        <div class="guide-title">⬇ Télécharger une vidéo YouTube <span class="badge">INTERNET REQUIS</span></div>
+        <div class="guide-body">
+          <div class="guide-step">
+            <div class="step-num">1</div>
+            <div class="step-body"><div class="step-title">Collez le lien</div><div class="step-desc">Copiez l'URL depuis YouTube et collez-la dans le champ. YDrop détecte automatiquement le lien et lance l'analyse dès le collage.</div></div>
+          </div>
+          <div class="guide-step">
+            <div class="step-num">2</div>
+            <div class="step-body"><div class="step-title">Choisissez le format</div><div class="step-desc">Sélectionnez la qualité vidéo (360p à 4K) ou un format audio (MP3, FLAC, WAV, M4A, OGG). Les formats audio extraient uniquement la piste sonore.</div></div>
+          </div>
+          <div class="guide-step">
+            <div class="step-num">3</div>
+            <div class="step-body"><div class="step-title">Définissez le dossier de sortie</div><div class="step-desc">Cliquez sur <strong>Parcourir</strong> pour choisir où enregistrer le fichier. Le dossier est mémorisé pour les prochains téléchargements.</div></div>
+          </div>
+          <div class="guide-step">
+            <div class="step-num">4</div>
+            <div class="step-body"><div class="step-title">Téléchargez</div><div class="step-desc">Cliquez sur <strong>Télécharger</strong>. La barre de progression affiche l'avancement en temps réel. Le fichier apparaît dans les résultats à la fin.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="guide-card">
+        <div class="guide-title">✂ Découper une vidéo <span class="badge" style="background:rgba(71,255,179,.1);color:var(--ok);border-color:rgba(71,255,179,.2)">100% HORS LIGNE</span></div>
+        <div class="guide-body">
+          <div class="guide-step">
+            <div class="step-num pk">1</div>
+            <div class="step-body"><div class="step-title">Importez votre vidéo</div><div class="step-desc">Cliquez sur la zone d'import ou glissez-déposez un fichier MP4, MOV, AVI, MKV ou WEBM. La vidéo est traitée <strong>entièrement en local</strong> par ffmpeg — aucune donnée n'est envoyée sur internet.</div></div>
+          </div>
+          <div class="guide-step">
+            <div class="step-num pk">2</div>
+            <div class="step-body"><div class="step-title">Sélectionnez la plage</div><div class="step-desc">Utilisez les <strong>poignées de la timeline</strong> (glissez les barres roses) ou saisissez les temps manuellement. Cliquez sur <strong>Aperçu</strong> pour vérifier la sélection.</div></div>
+          </div>
+          <div class="guide-step">
+            <div class="step-num pk">3</div>
+            <div class="step-body"><div class="step-title">Choisissez le ratio de sortie</div><div class="step-desc"><strong>Original</strong> conserve les proportions. Les autres ratios recadrent et redimensionnent : <strong>9:16</strong> pour TikTok/Reels, <strong>1:1</strong> pour Instagram carré, <strong>4:5</strong> pour portrait, <strong>16:9</strong> pour YouTube.</div></div>
+          </div>
+          <div class="guide-step">
+            <div class="step-num pk">4</div>
+            <div class="step-body"><div class="step-title">Définissez la durée des segments</div><div class="step-desc">YDrop découpe automatiquement la plage sélectionnée en morceaux de durée égale (15s, 30s, 1min…). Utilisez <strong>Calculer segments</strong> pour voir la liste avant de lancer.</div></div>
+          </div>
+          <div class="guide-step">
+            <div class="step-num pk">5</div>
+            <div class="step-body"><div class="step-title">Nommez vos fichiers</div><div class="step-desc">Mode <strong>Nom de la vidéo</strong> : génère <em>MaVideo_part01.mp4</em>, <em>MaVideo_part02.mp4</em>… Mode <strong>segment_XX</strong> : nommage générique. Vous pouvez aussi saisir un nom personnalisé.</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ PARAMÈTRES ══ -->
+    <section id="sec-params" class="sec">
+      <div class="ptitle">Paramètres</div>
+      <div class="psub">Configurez YDrop selon vos préférences. Les réglages sont sauvegardés automatiquement.</div>
+
+      <!-- Dossiers par défaut -->
+      <div class="settings-group">
+        <div class="settings-group-title">📁 Dossiers par défaut</div>
+        <div class="settings-row">
+          <div><div class="settings-label">Dossier de téléchargement</div><div class="settings-sub">Proposé automatiquement à chaque téléchargement YouTube</div></div>
+        </div>
+        <div class="fsel" style="margin-top:8px;margin-bottom:16px">
+          <div class="fpath" id="param-dl-path">— Non défini —</div>
+          <button class="btn bg" onclick="paramChooseFolder('dl')">📁 Choisir</button>
+          <button class="btn bg" onclick="paramClearFolder('dl')" title="Effacer" style="padding:12px 14px">✕</button>
+        </div>
+        <div class="settings-row">
+          <div><div class="settings-label">Dossier de découpe</div><div class="settings-sub">Proposé automatiquement à chaque opération de découpe</div></div>
+        </div>
+        <div class="fsel" style="margin-top:8px">
+          <div class="fpath" id="param-cut-path">— Non défini —</div>
+          <button class="btn bg" onclick="paramChooseFolder('cut')">📁 Choisir</button>
+          <button class="btn bg" onclick="paramClearFolder('cut')" title="Effacer" style="padding:12px 14px">✕</button>
+        </div>
+      </div>
+
+      <!-- Statut des binaires -->
+      <div class="settings-group">
+        <div class="settings-group-title">🔧 Dépendances</div>
+        <div class="settings-row">
+          <div><div class="settings-label">yt-dlp</div><div class="settings-sub" id="param-ytdlp-path" style="word-break:break-all">—</div></div>
+          <div class="bin-dot" id="param-dot-ytdlp" style="width:8px;height:8px;margin-right:4px"></div>
+        </div>
+        <div class="settings-row">
+          <div><div class="settings-label">ffmpeg</div><div class="settings-sub" id="param-ffmpeg-path" style="word-break:break-all">—</div></div>
+          <div class="bin-dot" id="param-dot-ffmpeg" style="width:8px;height:8px;margin-right:4px"></div>
+        </div>
+      </div>
+
+      <!-- À propos -->
+      <div class="settings-group">
+        <div class="settings-group-title">ℹ À propos</div>
+        <div class="settings-row"><div class="settings-label">Version</div><span style="color:var(--muted);font-size:.85rem">1.0.0</span></div>
+        <div class="settings-row"><div class="settings-label">Découpe vidéo</div><span style="color:var(--ok);font-size:.82rem">🔌 100% hors ligne</span></div>
+        <div class="settings-row"><div class="settings-label">Téléchargement</div><span style="color:var(--muted);font-size:.82rem">🌐 Internet requis</span></div>
+      </div>
+
+      <div style="text-align:right">
+        <span class="saved-badge" id="save-badge">✓ Paramètres sauvegardés</span>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<div id="toast"><span id="ti"></span><span id="tmsg"></span></div>
+
+<script src="script.js"></script>
+</body>
+</html>
