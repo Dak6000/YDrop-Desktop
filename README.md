@@ -1,112 +1,49 @@
-# YDrop Desktop 🎬
+# YDrop Desktop
 
-Application desktop multiplateforme (Windows · macOS · Linux) pour **télécharger des vidéos YouTube** et **découper des vidéos** localement.
+Téléchargeur YouTube + créateur de vidéos courtes (TikTok, Reels, Shorts, WhatsApp…) — Electron.
 
-Basée sur Electron + yt-dlp + ffmpeg.
+## Nouveautés v1.1
 
----
+**Téléchargement rapide**
+- Copiez un lien : YDrop le détecte et propose de le télécharger en 1 clic.
+- Mode **⚡ automatique au collage** (Ctrl+V n'importe où dans l'onglet, bouton Coller, ou glisser un lien sur la fenêtre).
+- **Raccourci global `Ctrl/Cmd+Maj+Y`** : télécharge le lien du presse-papiers même si YDrop est réduit.
+- Plusieurs liens collés d'un coup et playlists complètes → file d'attente (1 à 3 téléchargements simultanés).
+- Dossier par défaut automatique (`Téléchargements/YDrop`), plus besoin de le choisir.
+- Sous-titres YouTube téléchargés avec la vidéo (.srt nettoyé).
 
-## 📁 Structure du projet
+**Suivi fiable**
+- Vraie progression (vidéo/audio/fusion), vitesse, temps restant, annulation, relance.
+- Cause des échecs expliquée en français (robot YouTube, âge, privé, 403, réseau, disque…) + bouton de correction.
+- Réessais automatiques (réseau) et **mise à jour automatique de yt-dlp** si YouTube change.
+- Installation automatique de **Deno**, désormais requis par yt-dlp pour YouTube (cause fréquente d'échecs).
 
+**Historique**
+- Recherche, filtres Réussis/Échecs, ouvrir, afficher dans le dossier, **retélécharger** (même format ou autre), copier le lien, envoyer vers « Découper ».
+
+**Découpe pour les réseaux sociaux**
+- Formats 9:16 (TikTok/Reels/Shorts/Statut), 4:5, 1:1, 16:9, Original — **plusieurs formats en une seule passe**.
+- Cadrage : recadrage réglable (gauche ↔ droite), **fond flou**, ou bandes noires.
+- Durées recommandées par plateforme, **coupe aux pauses** (pas au milieu d'une phrase), sélection segment par segment.
+- **Sous-titres incrustés** : fichier .srt, sous-titres YouTube détectés automatiquement, ou génération automatique (Whisper). Styles TikTok / jaune / boîte / classique, mots par ligne, position, aperçu en direct, export .srt par segment.
+- Encodage H.264/AAC `yuv420p` compatible partout, 3 niveaux de qualité.
+
+## Dossier `bin/` (non versionné)
 ```
-ydrop/
-├── bin/                    ← Placez ici yt-dlp et ffmpeg
-│   ├── yt-dlp.exe          (Windows)
-│   ├── ffmpeg.exe          (Windows)
-│   ├── yt-dlp              (macOS / Linux)
-│   └── ffmpeg              (macOS / Linux)
-├── src/
-│   ├── main.js             ← Processus principal Electron
-│   ├── preload.js          ← Bridge IPC sécurisé
-│   └── renderer/
-|       ├── script.js 
-│       ├── styles.css
-│       └── index.html      ← Interface utilisateur
-├── assets/
-│   └── icon.png            ← Icône de l'app (optionnel)
-├── package.json
-└── README.md
+bin/yt-dlp(.exe)   bin/ffmpeg(.exe)   bin/ffprobe(.exe)   (déjà utilisés par v1.0)
 ```
+ffmpeg doit inclure **libass** (build « full », ex. gyan.dev) pour incruster des sous-titres.
+yt-dlp et Deno sont mis à jour/installés automatiquement dans le dossier de données de l'utilisateur.
 
----
+## Génération automatique de sous-titres (optionnel)
+1. Téléchargez `whisper-bin-x64.zip` depuis les releases de [whisper.cpp](https://github.com/ggml-org/whisper.cpp/releases).
+2. Paramètres › Outils › Whisper › **Dossier** : copiez-y `whisper-cli.exe` et ses DLL.
+3. Placez un modèle (ex. `ggml-base.bin`) dans le sous-dossier `models/`.
 
-## 🚀 Installation
-
-### 1. Installer les dépendances Node.js
-
-```bash
+## Développement
+```
 npm install
-```
-
-### 2. Télécharger les binaires
-
-#### Windows
-- **yt-dlp** : https://github.com/yt-dlp/yt-dlp/releases/latest → `yt-dlp.exe` → dossier `bin/`
-- **ffmpeg** : https://www.gyan.dev/ffmpeg/builds/ → extraire `ffmpeg.exe` → dossier `bin/`
-
-#### macOS
-```bash
-brew install yt-dlp ffmpeg
-mkdir -p bin
-cp $(which yt-dlp) bin/yt-dlp
-cp $(which ffmpeg) bin/ffmpeg
-```
-
-#### Linux
-```bash
-sudo apt install ffmpeg
-pip install yt-dlp
-mkdir -p bin
-cp $(which yt-dlp) bin/yt-dlp
-cp $(which ffmpeg) bin/ffmpeg
-chmod +x bin/yt-dlp bin/ffmpeg
-```
-
-### 3. Lancer l'application
-
-```bash
 npm start
+npm run build:win      # installateur
+npm run release:win    # build + publication GitHub (variable GH_TOKEN)
 ```
-
----
-
-## 📦 Compiler un exécutable
-
-```bash
-# Windows (.exe installer)
-npm run build:win
-
-# macOS (.dmg)
-npm run build:mac
-
-# Linux (.AppImage)
-npm run build:linux
-```
-
-Les fichiers compilés seront dans le dossier `dist/`.
-
-> ⚠️ Les binaires `bin/` sont inclus automatiquement dans le build grâce à `extraResources` dans `package.json`.
-
----
-
-## 🎯 Fonctionnalités
-
-| Fonctionnalité | Détail |
-|---|---|
-| ⬇ Téléchargement vidéo | 360p / 480p / 720p / 1080p / 4K en MP4 |
-| 🎵 Téléchargement audio | MP3 (320k / 192k), M4A, FLAC, WAV, OGG |
-| ✂ Découpe vidéo | Timeline interactive, segments calculés automatiquement |
-| 🔄 Ratios de sortie | Original / 9:16 TikTok / 1:1 Carré / 4:5 Portrait / 16:9 |
-| 📁 Dossier de sortie | Sélection via dialogue natif OS |
-| 🪟 Fenêtre sans bordures | Titlebar personnalisé avec contrôles natifs |
-| 🌐 Multiplateforme | Windows · macOS · Linux |
-
----
-
-## 🛠 Dépannage
-
-**"Binaires manquants"** → Vérifiez que `bin/yt-dlp` et `bin/ffmpeg` existent bien.
-
-**Erreur de téléchargement** → Mettez à jour yt-dlp : `yt-dlp -U`
-
-**Vidéo non lisible dans l'app** → Normal, l'aperçu nécessite un codec compatible. La découpe fonctionne quand même.
