@@ -17,18 +17,33 @@ async function openVideoFile() { const p = await window.ydrop.openVideo(); if (p
 window.openInCutter = (p) => loadVideoFile(p);
 
 async function loadVideoFile(p) {
+  try { await loadVideoFileInner(p); }
+  catch (e) { console.error('loadVideoFile', e); toast('err', '✗ Impossible de charger la vidéo : ' + (e && e.message ? e.message : e)); }
+}
+async function loadVideoFileInner(p) {
   cFile = p; segs = []; silenceCache = { file: '', list: null };
   const vid = $('cvid');
   $('vid-warn').style.display = 'none';
-  vid.src = window.ydrop.fileUrl(p);
-  let info = { duration: 0 };
-  try { info = await window.ydrop.probe(p); } catch (_) {}
-  cDur = info.duration;
-  if (!cDur) await new Promise((res) => { vid.onloadedmetadata = () => { cDur = vid.duration || 60; res(); }; setTimeout(res, 4000); });
-  cS = 0; cE = cDur;
+  // L'éditeur s'affiche tout de suite : même si l'analyse échoue, la vidéo est visible
   $('cut-editor').style.display = ''; $('cut-res').style.display = 'none';
+  $('cut-fname').textContent = '— ' + p.split(/[\\/]/).pop();
+  vid.src = window.ydrop.fileUrl(p);
+  vid.load();
+  let info = { duration: 0 };
+  try { info = (await window.ydrop.probe(p)) || info; } catch (e) { console.warn('probe', e); }
+  cDur = info.duration || 0;
+  if (!cDur) {
+    await new Promise((res) => {
+      if (vid.readyState >= 1 && vid.duration) return res();
+      vid.addEventListener('loadedmetadata', () => res(), { once: true });
+      setTimeout(res, 5000);
+    });
+    cDur = (isFinite(vid.duration) && vid.duration) || 0;
+  }
+  if (!cDur) { cDur = 60; toast('err', '⚠ Durée de la vidéo inconnue (fichier illisible ?)'); }
+  cS = 0; cE = cDur;
   $('slist').innerHTML = ''; $('smart-status').textContent = '';
-  $('cut-fname').textContent = '— ' + p.split(/[\\/]/).pop() + (info.width ? ` · ${info.width}×${info.height}` : '');
+  if (info.width) $('cut-fname').textContent += ` · ${info.width}×${info.height}`;
   updTL(); updTI(); buildTicks();
   $('name-custom').value = baseNameOf(p); updNamePreview();
   clearSubs(true); await detectSiblingSubs();
@@ -241,8 +256,11 @@ function initCut() {
   dz.addEventListener('drop', (e) => {
     e.preventDefault(); e.stopPropagation(); dz.classList.remove('ov');
     const f = e.dataTransfer.files[0]; if (!f) return;
-    const p = window.ydrop.pathForFile(f);
-    if (p && /\.(mp4|mov|avi|mkv|webm|m4v)$/i.test(p)) loadVideoFile(p); else toast('err', '✗ Format vidéo non pris en charge');
+    // f.path fonctionne directement dans Electron 29 ; sinon on passe par l'API du preload
+    let p = f.path || '';
+    if (!p) { try { p = window.ydrop.pathForFile(f); } catch (_) {} }
+    if (!p) return toast('err', '✗ Chemin du fichier introuvable — utilisez plutôt un clic pour choisir la vidéo');
+    if (/\.(mp4|mov|avi|mkv|webm|m4v)$/i.test(p)) loadVideoFile(p); else toast('err', '✗ Format vidéo non pris en charge');
   });
 
   vid.addEventListener('timeupdate', () => { if (cDur) $('tlprog').style.width = (vid.currentTime / cDur) * 100 + '%'; updateSubOverlay(); });
